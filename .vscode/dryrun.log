@@ -1,0 +1,15 @@
+make run --dry-run --keep-going --print-directory
+make: Entering directory '/home/test/Documents/rpi-asm-framebuffer'
+ 
+aarch64-linux-gnu-as -g --warn --fatal-warnings start.s -o start.o
+ 
+aarch64-linux-gnu-as -g --warn --fatal-warnings app.s -o app.o
+ 
+aarch64-linux-gnu-ld start.o app.o -T memmap -o kernel8.elf -M > memory_map.txt
+ 
+aarch64-linux-gnu-objdump -D kernel8.elf > kernel8.list
+ 
+aarch64-linux-gnu-objcopy kernel8.elf -O binary kernel8.img
+qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
+make: Leaving directory '/home/test/Documents/rpi-asm-framebuffer'
+ 

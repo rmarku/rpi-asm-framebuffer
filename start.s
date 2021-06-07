@@ -79,84 +79,10 @@ FB_Init:
 	cbz w0,FB_Init // IF (Frame Buffer Pointer == Zero) Re-Initialize Frame Buffer
 	and w0,w0,0x3FFFFFFF // Convert Mail Box Frame Buffer Pointer From BUS Address To Physical Address ($CXXXXXXX -> $3XXXXXXX)
 	str w0,[x2] // Store Frame Buffer Pointer Physical Address
-	add w10,w0,wzr
 
-// Core 0 Init the framebuffer
-Serial_Init:
-	mov x0, UART0_CR
-	movk x0, MMIO_BASE_ALTA, lsl #16
-    str	wzr, [x0] // UART0_CR = 0    turn off UART0
-
-	mov w0, #5
-	bl delay    // delay ~200 cycles
-
-	ldr x0, =(UART_STRUCT + MAIL_TAGS)
-	ldr x1, =MAIL_BASE
-	orr x1, x1,PERIPHERAL_BASE
-	str w0, [x1,MAIL_WRITE + MAIL_TAGS] // Mail Box Write UART config
-
-
-// Set UART0 to GPIO pins
-	mov x0, GPFSEL1
-	movk x0, MMIO_BASE_ALTA, lsl #16
-    ldr	w19, [x0] 				// Read GPFSEL1
-
-	and	w19, w19, #0xfffc0fff 	// gpio14, gpio15
-
-	mov	w1, #0x4000
-	movk	w1, #0x2, lsl #16
-	orr	w19, w19, w1 			// alt0
-
-	str	w19, [x0]				// Modify GPFSEL1
-
-
-	mov x0, GPPUD
-	movk x0, MMIO_BASE_ALTA, lsl #16
-    str	wzr, [x0] // GPPUD = 0;
-	
-	mov w0, #200
-	bl delay    // delay ~200 cycles
-
-	mov  x21, GPPUDCLK0
-	movk x21, MMIO_BASE_ALTA, lsl #16
-	mov	w19, #0xc000 
-    str	w19, [x21] // Set GPPUDCLK0
-
-	mov w0, #200
-	bl delay    // delay ~200 cycles
-
-    str	wzr, [x21] // Set GPPUDCLK0 = 0 Flush gpio setup
-
-	mov x0, UART0_ICR
-	movk x0, MMIO_BASE_ALTA, lsl #16
-	mov	w1, #0x7ff
-    str	w1, [x0] // UART0_ICR = 0x7FF clear interrupts
-	
-	mov x0, UART0_IBRD
-	movk x0, MMIO_BASE_ALTA, lsl #16
-	mov	w1, #0x2
-	str	w1, [x0] // 115200 baud
-	
-	mov x0, UART0_FBRD
-	movk x0, MMIO_BASE_ALTA, lsl #16
-	mov	w1, #0xB
-	str	w1, [x0] 
-
-	mov x0, UART0_LCRH
-	movk x0, MMIO_BASE_ALTA, lsl #16
-	mov	w1, #0x60 
-	str	w1, [x0] // 8n1
-
-	mov x0, UART0_CR
-	movk x0, MMIO_BASE_ALTA, lsl #16
-	mov	w1, #0x301 
-	str	w1, [x0] // enable Tx, Rx, FIFO
-
-
-	mov w0, w10 // Restore FrameBuffer Pointer
-	// Core 0 branch to app	
 	b main	
 
+.global delay
 delay:
   cbz w0, _delay_end
 delay_loop:
